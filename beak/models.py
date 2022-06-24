@@ -8,6 +8,8 @@ class Place(models.Model):
     address = models.CharField(max_length=200, blank=False)
     google_id = models.CharField(max_length=100, blank=False, primary_key=True)
     google_rating = models.FloatField(default=-1)
+    business_status = models.CharField(max_length=100, blank=False)
+    open_hours = models.CharField(max_length=100, blank=False)
 
 
 class User(models.Model):
