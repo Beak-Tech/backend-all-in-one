@@ -1,3 +1,8 @@
+import requests
+import json
+import collections
+
+
 class Places:
     def __init__(self, origin, key_words=[], api_key='AIzaSyD80xO_hx4nYwmRCVBL_uotZHm1udWDwRs', results={}):
         self.key_words = key_words
@@ -76,6 +81,16 @@ class Places:
                 open_now_places.append(place_id)
         return open_now_places
 
+    def request_open_times_of_places(self):
+        # Place API : Place Details https://developers.google.com/maps/documentation/places/web-service/details#required-parameters
+        api_url = 'https://maps.googleapis.com/maps/api/place/details/json?place_id={}&key={}&fields=opening_hours/periods' \
+            .format('{}', self.api_key)
+        for place_id in self.places.keys():
+            api_url = api_url.format(place_id)
+            response = requests.get(api_url)
+            json_response = json.loads(response.text)
+            self.places[place_id]['opening_hours'] = json_response['result']['opening_hours']['periods']
+
     def turn_to_model(self):
         ret = []
         for googleid, info in self.places.items():
@@ -84,5 +99,6 @@ class Places:
             cur_dic['name'] = info['name']
             cur_dic['address'] = info['address']
             cur_dic['google_rating'] = info['google_rating']
+            c
             ret.append(json.dumps(cur_dic))
         return ret
