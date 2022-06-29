@@ -1,9 +1,19 @@
 from rest_framework import serializers
-from beak.models import Place, User
+from beak.models import Place, User, OpeningHours
 
 
-class PlaceSerializer(serializers.Serializer):
+class PlaceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Place
         fields = ['name', 'address', 'google_id',
-                  'google_rating', 'business_status', 'open_hours']
+                  'google_rating']
+
+
+class OpeningHoursSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OpeningHours
+        fields = ['weekday', 'from_hour', 'to_hour', 'place']
+
+# a= datetime.time.now()
+#p = Place(name="ok", address="ok_address", google_id = 'example_id', google_rating = 3.4)
+#oph = OpeningHours(place = p, weekday = 0, from_hour =a, to_hour = a)
