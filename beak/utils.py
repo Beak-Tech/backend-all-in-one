@@ -1,9 +1,11 @@
 import requests
 import json
 import collections
+import datetime
+from beak.serializers import PlaceSerializer, OpeningHoursSerializer
 
 
-class Places:
+class Place_Utils:
     def __init__(self, origin, key_words=[], api_key='AIzaSyD80xO_hx4nYwmRCVBL_uotZHm1udWDwRs', results={}):
         self.key_words = key_words
         self.origin = origin
@@ -102,3 +104,25 @@ class Places:
             c
             ret.append(json.dumps(cur_dic))
         return ret
+
+# The logic remains to be updated.
+
+
+def check_time_availbility(start_str, end_str, opening_hours):
+    start_datetime = datetime.datetime.strptime(
+        start_str, '%Y-%m-%dT%H:%M')
+    end_datetime = datetime.datetime.strptime(
+        end_str, '%Y-%m-%dT%H:%M')
+    start_weekday = start_datetime.weekday()
+    end_weekday = end_datetime.weekday()
+    start_weekday_opening_hours = OpeningHoursSerializer(
+        opening_hours.filter(weekday=start_weekday), many=True).data[0]
+    end_weekday_opening_hours = OpeningHoursSerializer(
+        opening_hours.filter(weekday=end_weekday), many=True).data[0]
+    start_weekday_open_time = datetime.datetime.strptime(
+        start_weekday_opening_hours['from_hour'], '%H:%M:%S').time()
+    end_weekday_close_time = datetime.datetime.strptime(
+        end_weekday_opening_hours['to_hour'], '%H:%M:%S').time()
+    if start_weekday_open_time > start_datetime.time() or end_weekday_close_time < end_datetime.time():
+        return False
+    return True
