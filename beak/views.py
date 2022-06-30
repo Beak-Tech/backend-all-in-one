@@ -1,14 +1,13 @@
 from django.shortcuts import render
-from beak.utils import check_time_availbility, request_save_open_times_of_places
-
 # Create your views here.
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from beak.models import Place, User
+from beak.models import Place, User, OpeningHours
 from beak.serializers import PlaceSerializer, OpeningHoursSerializer
 import datetime
 from beak.utils import Place_Utils
+from beak.utils import check_time_availbility, request_save_open_times_of_places
 
 
 @api_view(['GET'])
