@@ -27,7 +27,6 @@ class Place_Utils:
         self.results[key_word] = json_response['results']
 
     def result_filter(self, results):
-        place_ids = []
         for result in results:
             try:
                 if result['business_status'] != 'OPERATIONAL':
@@ -39,19 +38,10 @@ class Place_Utils:
                 self.places[place_id]['google_rating'] = result['rating']
                 self.places[place_id]['types'] = result['types']
             except KeyError:
-                if 'address' not in self.places[place_id] or 'name' not in self.places[place_id] or self.places[place_id]['google_rating'] < 3.0:
+                if 'address' not in self.places[place_id] or 'name' not in self.places[place_id] \
+                        or 'google_rating' not in self.places[place_id] \
+                        or self.places[place_id]['google_rating'] < 3.0:
                     self.places.pop(place_id)
-                else:
-                    place_ids.append(place_id)
-                continue
-            place_ids.append(place_id)
-        arrival_times, arrival_times_text, distances, distances_text = self.get_arrival_time_distances(
-            place_ids)
-        for place_id, at, attext, dis, distext in zip(place_ids, arrival_times, arrival_times_text, distances, distances_text):
-            self.places[place_id]['arrival_time'] = at
-            self.places[place_id]['arrival_time_text'] = attext
-            self.places[place_id]['distance'] = dis
-            self.places[place_id]['distance_text'] = distext
 
     def get_arrival_time_distances(self, place_ids):
         dests = ['place_id:{}|'.format(place_id) for place_id in place_ids]
