@@ -92,7 +92,7 @@ class Place_Utils:
             cur_dic['name'] = info['name']
             cur_dic['address'] = info['address']
             cur_dic['google_rating'] = info['google_rating']
-            ret.append(json.dumps(cur_dic))
+            ret.append(cur_dic)
         return ret
 
 # The logic remains to be updated.
@@ -118,21 +118,26 @@ def check_time_availbility(start_str, end_str, opening_hours):
     return True
 
 
-def request_open_times_of_places(place, api_key='AIzaSyD80xO_hx4nYwmRCVBL_uotZHm1udWDwRs'):
+def request_save_open_times_of_places(place, api_key='AIzaSyD80xO_hx4nYwmRCVBL_uotZHm1udWDwRs'):
     # Place API : Place Details https://developers.google.com/maps/documentation/places/web-service/details#required-parameters
     api_url = 'https://maps.googleapis.com/maps/api/place/details/json?place_id={}&key={}&fields=opening_hours/periods' \
         .format(place.google_id, api_key)
     response = requests.get(api_url)
     json_response = json.loads(response.text)
     for period in json_response['result']['opening_hours']['periods']:
-        open_time = period['open']['time']
-        close_time = period['close']['time']
+        try:
+            open_time = period['open']['time']
+            close_time = period['close']['time']
+            wwekday = period['open']['day']
+        except KeyError:
+            print('KeyError: {}'.format(place.google_id))
+            continue
 
         def google_weekday_to_datetime_weekday(x):
             return x - 1 if x > 0 else 6
         curr_weekday_hours = OpeningHours(
             place=place, weekday=google_weekday_to_datetime_weekday(
-                period['open']['day']),
+                wwekday),
             from_hour=datetime.time(int(open_time[:2]), int(open_time[2:])),
             to_hour=datetime.time(int(close_time[:2]), int(close_time[2:])))
         curr_weekday_hours.save()
