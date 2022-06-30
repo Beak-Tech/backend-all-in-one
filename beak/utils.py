@@ -39,7 +39,7 @@ class Place_Utils:
                 self.places[place_id]['google_rating'] = result['rating']
                 self.places[place_id]['types'] = result['types']
             except KeyError:
-                if 'address' not in self.places[place_id] or 'name' not in self.places[place_id]:
+                if 'address' not in self.places[place_id] or 'name' not in self.places[place_id] or self.places[place_id]['google_rating'] < 3.0:
                     self.places.pop(place_id)
                 else:
                     place_ids.append(place_id)
