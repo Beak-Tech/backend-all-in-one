@@ -3,6 +3,7 @@ import json
 import collections
 import datetime
 from beak.serializers import PlaceSerializer, OpeningHoursSerializer
+from beak.models import Place, OpeningHours
 
 
 class Place_Utils:
@@ -83,16 +84,6 @@ class Place_Utils:
                 open_now_places.append(place_id)
         return open_now_places
 
-    def request_open_times_of_places(self):
-        # Place API : Place Details https://developers.google.com/maps/documentation/places/web-service/details#required-parameters
-        api_url = 'https://maps.googleapis.com/maps/api/place/details/json?place_id={}&key={}&fields=opening_hours/periods' \
-            .format('{}', self.api_key)
-        for place_id in self.places.keys():
-            api_url = api_url.format(place_id)
-            response = requests.get(api_url)
-            json_response = json.loads(response.text)
-            self.places[place_id]['opening_hours'] = json_response['result']['opening_hours']['periods']
-
     def turn_to_model(self):
         ret = []
         for googleid, info in self.places.items():
@@ -101,7 +92,6 @@ class Place_Utils:
             cur_dic['name'] = info['name']
             cur_dic['address'] = info['address']
             cur_dic['google_rating'] = info['google_rating']
-            c
             ret.append(json.dumps(cur_dic))
         return ret
 
@@ -125,4 +115,25 @@ def check_time_availbility(start_str, end_str, opening_hours):
         end_weekday_opening_hours['to_hour'], '%H:%M:%S').time()
     if start_weekday_open_time > start_datetime.time() or end_weekday_close_time < end_datetime.time():
         return False
+    return True
+
+
+def request_open_times_of_places(place, api_key='AIzaSyD80xO_hx4nYwmRCVBL_uotZHm1udWDwRs'):
+    # Place API : Place Details https://developers.google.com/maps/documentation/places/web-service/details#required-parameters
+    api_url = 'https://maps.googleapis.com/maps/api/place/details/json?place_id={}&key={}&fields=opening_hours/periods' \
+        .format(place.google_id, api_key)
+    response = requests.get(api_url)
+    json_response = json.loads(response.text)
+    for period in json_response['result']['opening_hours']['periods']:
+        open_time = period['open']['time']
+        close_time = period['close']['time']
+
+        def google_weekday_to_datetime_weekday(x):
+            return x - 1 if x > 0 else 6
+        curr_weekday_hours = OpeningHours(
+            place=place, weekday=google_weekday_to_datetime_weekday(
+                period['open']['day']),
+            from_hour=datetime.time(int(open_time[:2]), int(open_time[2:])),
+            to_hour=datetime.time(int(close_time[:2]), int(close_time[2:])))
+        curr_weekday_hours.save()
     return True

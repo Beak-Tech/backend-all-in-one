@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from recsys.beak.utils import check_time_availbility
 
 # Create your views here.
 from rest_framework import status
@@ -17,4 +18,8 @@ def get_places(request):
     """
     data = request.data
     place = data['place']
-    planned_times = data['planned_times']
+    place_utils = Place_Utils(place, key_words=[
+                              'Golf', 'Escape game', 'Go Kart', 'Bowling', 'Archery', 'Shooting Range'])
+    serializer = PlaceSerializer(place_utils.turn_to_model(), many=True)
+    place_utils.request_open_times_of_places
+    check_time_availbility(data['start_time'], data['end_time'], )
