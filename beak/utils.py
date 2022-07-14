@@ -21,8 +21,8 @@ class Place_Utils:
 
     def text_search(self, key_word):
         # Places API
-        api_url = 'https://maps.googleapis.com/maps/api/place/textsearch/json?query={}&key={}' \
-            .format(key_word, self.api_key)
+        api_url = 'https://maps.googleapis.com/maps/api/place/textsearch/json?query={} in {}&key={}' \
+            .format(key_word, self.origin, self.api_key)
         response = requests.get(api_url)
         json_response = json.loads(response.text)
         self.results[key_word] = json_response['results']
