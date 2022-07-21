@@ -4,7 +4,7 @@ import json
 import collections
 import datetime
 from beak.serializers import PlaceSerializer, OpeningHoursSerializer
-from beak.models import Place, OpeningHours
+from beak.models import Place, OpeningHours, General_Location
 
 
 class Place_Utils:
@@ -78,6 +78,8 @@ class Place_Utils:
     def turn_to_model(self):
         ret = []
         for googleid, info in self.places.items():
+            if Place.objects.filter(google_id=googleid).exists():
+                continue
             cur_dic = {}
             cur_dic['google_id'] = googleid
             cur_dic['name'] = info['name']
@@ -131,6 +133,9 @@ def check_time_availbility(start_str, end_str, opening_hours):
 
 
 def request_save_open_times_of_places(place, api_key='AIzaSyD80xO_hx4nYwmRCVBL_uotZHm1udWDwRs'):
+    # Return early if the opening hours are already saved.
+    if OpeningHours.objects.filter(place=place).exists():
+        return True
     # Place API : Place Details https://developers.google.com/maps/documentation/places/web-service/details#required-parameters
     api_url = 'https://maps.googleapis.com/maps/api/place/details/json?place_id={}&key={}&fields=opening_hours/periods' \
         .format(place.google_id, api_key)
@@ -147,6 +152,9 @@ def request_save_open_times_of_places(place, api_key='AIzaSyD80xO_hx4nYwmRCVBL_u
 
         def google_weekday_to_datetime_weekday(x):
             return x - 1 if x > 0 else 6
+        if OpeningHours.objects.filter(place=place, weekday=google_weekday_to_datetime_weekday(wwekday)).exists():
+            print('Duplicate: {}'.format(place.google_id))
+            return False
         curr_weekday_hours = OpeningHours(
             place=place, weekday=google_weekday_to_datetime_weekday(
                 wwekday),
@@ -157,16 +165,29 @@ def request_save_open_times_of_places(place, api_key='AIzaSyD80xO_hx4nYwmRCVBL_u
 
 
 def get_some_places_to_play(place, start_date, end_date, keywords):
-    place_utils = Place_Utils(place, key_words=keywords)
-    serializer = PlaceSerializer(data=place_utils.turn_to_model(), many=True)
-    if serializer.is_valid():
-        place_objects = serializer.save()
-    valid_places = []
-    print('retrieved places, now filtering')
-    for place in place_objects:
-        if not request_save_open_times_of_places(place):
-            continue
-        if check_time_availbility(
-                start_date, end_date, OpeningHours.objects.filter(place=place)):
+    if General_Location.objects.filter(name=place).exists():
+        valid_places = General_Location.objects.get(name=place).places.all()
+    else:
+        new_loc = General_Location(name=place)
+        new_loc.save()
+        place_utils = Place_Utils(place, key_words=keywords)
+        serializer = PlaceSerializer(
+            data=place_utils.turn_to_model(), many=True)
+        if serializer.is_valid():
+            place_objects = serializer.save()
+        valid_places = []
+        print('retrieved places, now filtering')
+        for place in place_objects:
+            if not request_save_open_times_of_places(place):
+                # The place has a wrongly formatted opening times, so just delete the place.
+                place.delete()
+                continue
+            new_loc.places.add(place)
             valid_places.append(place)
-    return PlaceSerializer(valid_places, many=True).data
+            # We save the place in General_Location for cache:
+    time_match_places = []
+    for valid_place in valid_places:
+        if check_time_availbility(
+                start_date, end_date, OpeningHours.objects.filter(place=valid_place)):
+            time_match_places.append(valid_place)
+    return PlaceSerializer(time_match_places, many=True).data

@@ -11,6 +11,18 @@ WEEKDAYS = [
     (6, "Sunday"),
 ]
 
+# The model to implement cacheing for the recommendations:
+# E.g: The first time we search berkeley, we will store every place in the General_Location(Berkeley)
+#      and all future searches about berkeley will return the same results (unless different opening times).
+
+
+class General_Location(models.Model):
+    places = models.ManyToManyField('Place', blank=True)
+    name = models.CharField(max_length=100, blank=False, primary_key=True)
+
+    def __str__(self):
+        return self.name
+
 
 class Place(models.Model):
     name = models.CharField(max_length=100)

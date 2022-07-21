@@ -18,8 +18,11 @@ def get_places(request):
     """
     print('GET request received')
     data = request.data
-    Place.objects.all().delete()
-    OpeningHours.objects.all().delete()
+    '''
+Place.objects.all().delete()
+OpeningHours.objects.all().delete()
+General_Location.objects.all().delete()
+    '''
     place = data['place']  # place = 'Los Angeles'
     if data['event']['play']:
         valid_play = get_some_places_to_play(
