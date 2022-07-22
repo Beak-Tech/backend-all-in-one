@@ -4,7 +4,7 @@ from django.shortcuts import render
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from beak.models import Place, User, OpeningHours, Token
+from beak.models import Place, User, OpeningHours, Token, General_Location
 from beak.serializers import PlaceSerializer, OpeningHoursSerializer
 import datetime
 from beak.utils import Place_Utils, get_some_places_to_play_with_token, get_token_utils
@@ -64,9 +64,8 @@ OpeningHours.objects.all().delete()
 General_Location.objects.all().delete()
 Token.objects.all().delete()
     '''
-    num = data['token']  # place = 'Los Angeles'
-    if data['event']['play']:
-        valid_play = get_some_places_to_play_with_token(num)
+    num = data['token']
+    valid_play = get_some_places_to_play_with_token(num)
     """
     if data['event']['eat']:
         valid_eat = get_some_places_to_play(

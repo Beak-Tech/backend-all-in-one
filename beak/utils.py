@@ -1,11 +1,12 @@
-from hashlib import sha1
+from hashlib import sha256
+import random
 import keyword
 import requests
 import json
 import collections
 import datetime
-from beak.serializers import PlaceSerializer, OpeningHoursSerializer
-from beak.models import Place, OpeningHours, General_Location
+from beak.serializers import PlaceSerializer, OpeningHoursSerializer, TokenSerializer
+from beak.models import Place, OpeningHours, General_Location, Token
 
 
 class Place_Utils:
@@ -195,8 +196,11 @@ def get_some_places_to_play(place, start_date, end_date, keywords):
 
 
 def get_token_utils(place, start_time, end_time, keywords):
-    token = sha1(place, start_time, end_time, keywords).hexdigest()
-    if token.objects.filter(number=token).exists():
+    # token = sha256(place + str(start_time) + str(end_time) +
+    #               str(random.randrange(1, 10000))).hexdigest()
+    token = place + str(start_time) + str(end_time) + \
+        str(random.randrange(1, 10000))
+    if False:
         return token
     else:
         new_token = Token(number=token)
@@ -208,11 +212,14 @@ def get_token_utils(place, start_time, end_time, keywords):
             place_objects = serializer.save()
         valid_places = []
         print('retrieved places, now filtering')
+        print(place_objects)
         for place in place_objects:
+            print(place)
             if not request_save_open_times_of_places(place):
                 # The place has a wrongly formatted opening times, so just delete the place.
                 place.delete()
                 continue
+            print(place)
             new_token.places.add(place)
             valid_places.append(place)
             # We save the place in Token for cache:
@@ -225,7 +232,9 @@ def get_token_utils(place, start_time, end_time, keywords):
 
 
 def get_some_places_to_play_with_token(token):
-    if token.objects.filter(number=token).exists():
-        valid_places = token.objects.get(number=token).places.all()
+    if Token.objects.filter(number=token).exists():
+        valid_places = Token.objects.get(number=token).places.all()
+        print(valid_places)
+        return PlaceSerializer(valid_places, many=True).data
     else:
         return None
