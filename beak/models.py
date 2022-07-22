@@ -24,6 +24,11 @@ class General_Location(models.Model):
         return self.name
 
 
+class Token(models.Model):
+    number = models.CharField(max_length=200, blank=False, primary_key=True)
+    places = models.ManyToManyField('Place', blank=True)
+
+
 class Place(models.Model):
     name = models.CharField(max_length=100)
     address = models.CharField(max_length=200, blank=False)
