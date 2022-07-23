@@ -124,4 +124,4 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 ALLOWED_HOSTS = ['198.211.99.20', 'localhost',
-                 '127.0.0.1', 'kubernetes.docker.internal']
+                 '127.0.0.1', 'kubernetes.docker.internal', 'solaceg.pythonanywhere.com']
