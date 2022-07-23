@@ -36,3 +36,8 @@ General_Location.objects.all().delete()
     """
     ret = {'places': valid_play, 'eat': {}}
     return Response(ret, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def hello(request):
+    return Response("Hello, world. You're at the Beak", status=status.HTTP_200_OK)
