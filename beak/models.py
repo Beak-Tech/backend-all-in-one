@@ -16,12 +16,28 @@ WEEKDAYS = [
 #      and all future searches about berkeley will return the same results (unless different opening times).
 
 
-class General_Location(models.Model):
+class General_Location_for_Eat(models.Model):
     places = models.ManyToManyField('Place', blank=True)
     name = models.CharField(max_length=100, blank=False, primary_key=True)
 
     def __str__(self):
         return self.name
+
+
+class General_Location_for_Play(models.Model):
+    places = models.ManyToManyField('Place', blank=True)
+    name = models.CharField(max_length=100, blank=False, primary_key=True)
+
+    def __str__(self):
+        return self.name
+
+
+class Token(models.Model):
+    number = models.CharField(max_length=64, blank=False, primary_key=True)
+    play_places = models.ManyToManyField(
+        'Place', blank=True, related_name='play_places')
+    eat_places = models.ManyToManyField(
+        'Place', blank=True, related_name='eat_places')
 
 
 class Place(models.Model):

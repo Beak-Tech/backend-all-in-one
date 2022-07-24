@@ -1,7 +1,8 @@
 from django.urls import path
-from beak.views import get_places, hello
+from beak.views import get_places, get_token, get_place_with_token
 
 urlpatterns = [
     path('places/', get_places),
-    path('', hello)
+    path('gettoken/', get_token),
+    path('getplacewithtoken/', get_place_with_token),
 ]

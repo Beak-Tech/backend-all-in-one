@@ -1,10 +1,12 @@
+from hashlib import sha256
+import random
 import keyword
 import requests
 import json
 import collections
 import datetime
-from beak.serializers import PlaceSerializer, OpeningHoursSerializer
-from beak.models import Place, OpeningHours, General_Location
+from beak.serializers import PlaceSerializer, OpeningHoursSerializer, TokenSerializer
+from beak.models import Place, OpeningHours, General_Location_for_Eat, General_Location_for_Play, Token
 
 
 class Place_Utils:
@@ -164,11 +166,12 @@ def request_save_open_times_of_places(place, api_key='AIzaSyD80xO_hx4nYwmRCVBL_u
     return True
 
 
-def get_some_places_to_play(place, start_date, end_date, keywords):
-    if General_Location.objects.filter(name=place).exists():
-        valid_places = General_Location.objects.get(name=place).places.all()
+def get_some_play(place, start_date, end_date, keywords):
+    if General_Location_for_Play.objects.filter(name=place).exists():
+        valid_places = General_Location_for_Play.objects.get(
+            name=place).places.all()
     else:
-        new_loc = General_Location(name=place)
+        new_loc = General_Location_for_Play(name=place)
         new_loc.save()
         place_utils = Place_Utils(place, key_words=keywords)
         serializer = PlaceSerializer(
@@ -184,10 +187,63 @@ def get_some_places_to_play(place, start_date, end_date, keywords):
                 continue
             new_loc.places.add(place)
             valid_places.append(place)
-            # We save the place in General_Location for cache:
     time_match_places = []
     for valid_place in valid_places:
         if check_time_availbility(
                 start_date, end_date, OpeningHours.objects.filter(place=valid_place)):
             time_match_places.append(valid_place)
-    return PlaceSerializer(time_match_places, many=True).data
+    return time_match_places
+
+
+def get_some_eat(place, start_date, end_date, keywords):
+    if General_Location_for_Eat.objects.filter(name=place).exists():
+        valid_places = General_Location_for_Eat.objects.get(
+            name=place).places.all()
+    else:
+        new_loc = General_Location_for_Eat(name=place)
+        new_loc.save()
+        place_utils = Place_Utils(place, key_words=keywords)
+        serializer = PlaceSerializer(
+            data=place_utils.turn_to_model(), many=True)
+        if serializer.is_valid():
+            place_objects = serializer.save()
+        valid_places = []
+        print('retrieved places, now filtering')
+        for place in place_objects:
+            if not request_save_open_times_of_places(place):
+                # The place has a wrongly formatted opening times, so just delete the place.
+                place.delete()
+                continue
+            new_loc.places.add(place)
+            valid_places.append(place)
+    time_match_places = []
+    for valid_place in valid_places:
+        if check_time_availbility(
+                start_date, end_date, OpeningHours.objects.filter(place=valid_place)):
+            time_match_places.append(valid_place)
+    return time_match_places
+
+
+def get_token_utils(place, start_time, end_time, keywords, play_or_eat):
+    token = sha256(place.encode('utf-8') + str(start_time).encode('utf-8') +
+                   str(end_time).encode('utf-8')).hexdigest()
+    new_token = Token(number=token)
+    new_token.save()
+    if play_or_eat == 0 or play_or_eat == 2:
+        valid_places = get_some_play(
+            place, start_time, end_time, keywords)
+        new_token.play_places.add(*valid_places)
+    if play_or_eat == 1 or play_or_eat == 2:
+        valid_places = get_some_eat(
+            place, start_time, end_time, keywords)
+        new_token.eat_places.add(*valid_places)
+    return token
+
+
+def get_some_places_to_play_with_token(token):
+    if Token.objects.filter(number=token).exists():
+        valid_play = Token.objects.get(number=token).play_places.all()
+        valid_eat = Token.objects.get(number=token).eat_places.all()
+        return valid_play, valid_eat
+    else:
+        return None
