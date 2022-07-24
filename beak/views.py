@@ -34,7 +34,7 @@ General_Location.objects.all().delete()
         valid_eat = get_some_places_to_play(
             place, data['start'], data['end'], keywords=[
                 'Restaurant', 'Fast Food', 'Pizza'])
-    ret = {'places': valid_play, 'eat': {valid_eat}}
+    ret = {'places': valid_play, 'eat': valid_eat}
     return Response(ret, status=status.HTTP_200_OK)
 
 
