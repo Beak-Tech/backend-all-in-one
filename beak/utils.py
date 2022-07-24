@@ -134,15 +134,17 @@ def check_time_availbility(start_str, end_str, opening_hours):
     return False
 
 
-def request_save_open_times_of_places(place, api_key='AIzaSyD80xO_hx4nYwmRCVBL_uotZHm1udWDwRs'):
+def request_save_details_of_places(place, api_key='AIzaSyD80xO_hx4nYwmRCVBL_uotZHm1udWDwRs'):
     # Return early if the opening hours are already saved.
     if OpeningHours.objects.filter(place=place).exists():
         return True
     # Place API : Place Details https://developers.google.com/maps/documentation/places/web-service/details#required-parameters
-    api_url = 'https://maps.googleapis.com/maps/api/place/details/json?place_id={}&key={}&fields=opening_hours/periods' \
+    api_url = 'https://maps.googleapis.com/maps/api/place/details/json?place_id={}&key={}&fields=opening_hours/periods,website' \
         .format(place.google_id, api_key)
     response = requests.get(api_url)
     json_response = json.loads(response.text)
+    if 'website' in json_response['result']:
+        place.website = json_response['result']['website']
     for period in json_response['result']['opening_hours']['periods']:
         try:
             open_time = period['open']['time']
@@ -181,7 +183,7 @@ def get_some_play(place, start_date, end_date, keywords):
         valid_places = []
         print('retrieved places, now filtering')
         for place in place_objects:
-            if not request_save_open_times_of_places(place):
+            if not request_save_details_of_places(place):
                 # The place has a wrongly formatted opening times, so just delete the place.
                 place.delete()
                 continue
@@ -210,7 +212,7 @@ def get_some_eat(place, start_date, end_date, keywords):
         valid_places = []
         print('retrieved places, now filtering')
         for place in place_objects:
-            if not request_save_open_times_of_places(place):
+            if not request_save_details_of_places(place):
                 # The place has a wrongly formatted opening times, so just delete the place.
                 place.delete()
                 continue

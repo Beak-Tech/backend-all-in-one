@@ -4,9 +4,10 @@ from django.shortcuts import render
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from beak.serializers import PlaceSerializer, OpeningHoursSerializer
-from beak.utils import Place_Utils, get_some_places_to_play_with_token, get_token_utils
-from beak.utils import check_time_availbility, request_save_open_times_of_places, get_some_play, get_some_eat
+from beak.serializers import PlaceSerializer
+from beak.utils import get_some_places_to_play_with_token, get_token_utils
+from beak.utils import get_some_play, get_some_eat
+from beak.models import Token, Place, User, OpeningHours, General_Location_for_Eat, General_Location_for_Play
 
 
 @api_view(['POST'])
@@ -45,10 +46,11 @@ def get_place_with_token(request):
     print('GET request received')
     data = request.data
     '''
-    Place.objects.all().delete()
-    OpeningHours.objects.all().delete()
-    General_Location.objects.all().delete()
-    Token.objects.all().delete()
+Place.objects.all().delete()
+OpeningHours.objects.all().delete()
+General_Location_for_Eat.objects.all().delete()
+General_Location_for_Play.objects.all().delete()
+Token.objects.all().delete()
     '''
     num = data['token']
     valid_play, valid_eat = get_some_places_to_play_with_token(num)
