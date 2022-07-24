@@ -191,18 +191,61 @@ def get_some_places_to_play(place, start_date, end_date, keywords):
         if check_time_availbility(
                 start_date, end_date, OpeningHours.objects.filter(place=valid_place)):
             time_match_places.append(valid_place)
-    return PlaceSerializer(time_match_places, many=True).data
+    return time_match_places
 
 def get_token_utils(place, start_time, end_time, keywords):
-    # token = sha256(place + str(start_time) + str(end_time) +
-    #               str(random.randrange(1, 10000))).hexdigest()
-    token = place + str(start_time) + str(end_time) + \
-        str(random.randrange(1, 10000))
-    if False:
-        return token
+    token = sha256(place.encode('utf-8') + str(start_time).encode('utf-8') + str(end_time).encode('utf-8')).hexdigest()
+                 #str(random.randrange(1, 10000)).encode('utf-8'))
+    #token = place + str(start_time) + str(end_time) + \
+        #str(random.randrange(1, 10000))
+    # if False:
+    #     return token
+    # else:
+    #     new_token = Token(number=token)
+    #     new_token.save()
+    #     place_utils = Place_Utils(place, key_words=keywords)
+    #     serializer = PlaceSerializer(
+    #         data=place_utils.turn_to_model(), many=True)
+    #     if serializer.is_valid():
+    #         place_objects = serializer.save()
+    #     valid_places = []
+    #     print('retrieved places, now filtering')
+    #     print(place_objects)
+    #     for place in place_objects:
+    #         print(place)
+    #         if not request_save_open_times_of_places(place):
+    #             # The place has a wrongly formatted opening times, so just delete the place.
+    #             place.delete()
+    #             continue
+    #         print(place)
+    #         new_token.places.add(place)
+    #         valid_places.append(place)
+    #         # We save the place in Token for cache:
+    # time_match_places = []
+    # for valid_place in valid_places:
+    #     if check_time_availbility(
+    #             start_time, end_time, OpeningHours.objects.filter(place=valid_place)):
+    #         time_match_places.append(valid_place)
+    get_some_places_to_play1(token, place, start_time, end_time, keywords)
+    return token
+
+
+def get_some_places_to_play_with_token(token):
+    if Token.objects.filter(number=token).exists():
+        valid_places = Token.objects.get(number=token).places.all()
+        return PlaceSerializer(valid_places, many=True).data
     else:
-        new_token = Token(number=token)
-        new_token.save()
+        return None
+
+
+def get_some_places_to_play1(token, place, start_date, end_date, keywords):
+    if General_Location.objects.filter(name=place).exists():
+        valid_places = General_Location.objects.get(name=place).places.all()
+    else:
+        new_loc = General_Location(name=place)
+        new_tok = Token(number = token)
+        new_loc.save()
+        new_tok.save()
         place_utils = Place_Utils(place, key_words=keywords)
         serializer = PlaceSerializer(
             data=place_utils.turn_to_model(), many=True)
@@ -210,29 +253,18 @@ def get_token_utils(place, start_time, end_time, keywords):
             place_objects = serializer.save()
         valid_places = []
         print('retrieved places, now filtering')
-        print(place_objects)
         for place in place_objects:
-            print(place)
             if not request_save_open_times_of_places(place):
                 # The place has a wrongly formatted opening times, so just delete the place.
                 place.delete()
                 continue
-            print(place)
-            new_token.places.add(place)
+            #new_loc.places.add(place)
+            new_tok.places.add(place)
             valid_places.append(place)
-            # We save the place in Token for cache:
+            # We save the place in General_Location for cache:
     time_match_places = []
     for valid_place in valid_places:
         if check_time_availbility(
-                start_time, end_time, OpeningHours.objects.filter(place=valid_place)):
+                start_date, end_date, OpeningHours.objects.filter(place=valid_place)):
             time_match_places.append(valid_place)
-    return token
-
-
-def get_some_places_to_play_with_token(token):
-    if Token.objects.filter(number=token).exists():
-        valid_places = Token.objects.get(number=token).places.all()
-        print(valid_places)
-        return PlaceSerializer(valid_places, many=True).data
-    else:
-        return None
+    #return PlaceSerializer(time_match_places, many=True).data

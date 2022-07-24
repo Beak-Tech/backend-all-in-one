@@ -24,7 +24,7 @@ class General_Location(models.Model):
         return self.name
 
 class Token(models.Model):
-    number = models.CharField(max_length=200, blank=False, primary_key=True)
+    number = models.CharField(max_length=64, blank=False, primary_key=True)
     places = models.ManyToManyField('Place', blank=True)
 
 
