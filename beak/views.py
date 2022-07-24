@@ -35,7 +35,7 @@ General_Location.objects.all().delete()
                 'Restaurant', 'Fast Food', 'Pizza'])
     """
     ret = {'places': PlaceSerializer(valid_play, many=True).data, 'eat': {}}
-    
+
     return Response(ret, status=status.HTTP_200_OK)
 
 
@@ -73,6 +73,6 @@ Token.objects.all().delete()
             place, data['start_time'], data['end_time'], keywords=[
                 'Restaurant', 'Fast Food', 'Pizza'])
     """
-    ret = {'places': valid_play, 'eat': {}}
+    ret = {'places':  PlaceSerializer(valid_play, many=True).data, 'eat': {}}
 
     return Response(ret, status=status.HTTP_200_OK)
