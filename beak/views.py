@@ -23,18 +23,18 @@ Place.objects.all().delete()
 OpeningHours.objects.all().delete()
 General_Location.objects.all().delete()
     '''
-    place = data['place']  # place = 'Los Angeles'
-    if data['event']['play']:
+    place = data['location']  # place = 'Los Angeles'
+    valid_play, valid_eat = None, None
+    if data['item'] == 0 or data['item'] == 2:
         valid_play = get_some_places_to_play(
-            place, data['start_time'], data['end_time'], keywords=[
+            place, data['start'], data['end'], keywords=[
                 'Golf', 'Escape game', 'Go Kart'])
-    """
-    if data['event']['eat']:
+
+    if data['item'] == 1 or data['item'] == 2:
         valid_eat = get_some_places_to_play(
-            place, data['start_time'], data['end_time'], keywords=[
+            place, data['start'], data['end'], keywords=[
                 'Restaurant', 'Fast Food', 'Pizza'])
-    """
-    ret = {'places': valid_play, 'eat': {}}
+    ret = {'places': valid_play, 'eat': {valid_eat}}
     return Response(ret, status=status.HTTP_200_OK)
 
 
