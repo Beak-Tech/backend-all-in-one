@@ -11,7 +11,7 @@ from beak.utils import Place_Utils
 from beak.utils import check_time_availbility, request_save_open_times_of_places, get_some_places_to_play
 
 
-@api_view(['GET'])
+@api_view(['POST'])
 def get_places(request):
     """
     Return a list of places according to the query parameters.
