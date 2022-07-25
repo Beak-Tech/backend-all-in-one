@@ -42,9 +42,8 @@ def get_token(request):
 
 
 @api_view(['GET'])
-def get_place_with_token(request):
+def get_place_with_token(request, token_num):
     print('GET request received')
-    data = request.data
     '''
 Place.objects.all().delete()
 OpeningHours.objects.all().delete()
@@ -52,8 +51,7 @@ General_Location_for_Eat.objects.all().delete()
 General_Location_for_Play.objects.all().delete()
 Token.objects.all().delete()
     '''
-    num = data['token']
-    valid_play, valid_eat = get_some_places_to_play_with_token(num)
+    valid_play, valid_eat = get_some_places_to_play_with_token(token_num)
     ret = {'places':  PlaceSerializer(
         valid_play, many=True).data, 'eat': PlaceSerializer(valid_eat, many=True).data}
     return Response(ret, status=status.HTTP_200_OK)
