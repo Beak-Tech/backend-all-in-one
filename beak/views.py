@@ -51,6 +51,8 @@ General_Location_for_Eat.objects.all().delete()
 General_Location_for_Play.objects.all().delete()
 Token.objects.all().delete()
     '''
+    if not token_num:
+        return Response({"error": "No token number provided"}, status=status.HTTP_400_BAD_REQUEST)
     valid_play, valid_eat = get_some_places_to_play_with_token(token_num)
     ret = {'places':  PlaceSerializer(
         valid_play, many=True).data, 'eat': PlaceSerializer(valid_eat, many=True).data}
