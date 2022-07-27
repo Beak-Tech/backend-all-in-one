@@ -10,7 +10,9 @@ from beak.models import Place, OpeningHours, General_Location_for_Eat, General_L
 
 
 class Place_Utils:
-    def __init__(self, origin, key_words=[], api_key='AIzaSyD80xO_hx4nYwmRCVBL_uotZHm1udWDwRs', results={}):
+    def __init__(self, origin, key_words=None, api_key='AIzaSyD80xO_hx4nYwmRCVBL_uotZHm1udWDwRs', results={}):
+        if key_words is None:
+            key_words = []
         self.key_words = key_words
         self.origin = origin
         self.api_key = api_key
@@ -93,7 +95,7 @@ class Place_Utils:
 # The logic remains to be updated.
 
 
-def check_time_availbility(start_str, end_str, opening_hours):
+def check_time_availbility(start_str, end_str, opening_hours, google_id):
     start_datetime = datetime.datetime.strptime(
         start_str, '%Y-%m-%dT%H:%M')
     end_datetime = datetime.datetime.strptime(
@@ -119,19 +121,24 @@ def check_time_availbility(start_str, end_str, opening_hours):
         if weekday_open_time != weekday_close_time:
             return True
     # We will need to check the start day then.
-    startday_opening_hours = OpeningHoursSerializer(
-        opening_hours.filter(weekday=start_weekday), many=True).data[0]
-    startday_close_time = datetime.datetime.strptime(
-        startday_opening_hours['from_hour'], '%H:%M:%S').time()
-    if startday_close_time > start_datetime.time():
-        return True
-    endday_opening_hours = OpeningHoursSerializer(
-        opening_hours.filter(weekday=end_weekday), many=True).data[0]
-    endday_open_time = datetime.datetime.strptime(
-        endday_opening_hours['to_hour'], '%H:%M:%S').time()
-    if endday_open_time < end_datetime.time():
-        return True
-    return False
+    try:
+        startday_opening_hours = OpeningHoursSerializer(
+            opening_hours.filter(weekday=start_weekday), many=True).data[0]
+        startday_close_time = datetime.datetime.strptime(
+            startday_opening_hours['from_hour'], '%H:%M:%S').time()
+        if startday_close_time > start_datetime.time():
+            return True
+        endday_opening_hours = OpeningHoursSerializer(
+            opening_hours.filter(weekday=end_weekday), many=True).data[0]
+        endday_open_time = datetime.datetime.strptime(
+            endday_opening_hours['to_hour'], '%H:%M:%S').time()
+        if endday_open_time < end_datetime.time():
+            return True
+        return False
+    except IndexError:
+        print(
+            f'No opening hours for {start_weekday} for google_id {google_id}.')
+        return False
 
 
 def request_save_details_of_places(place, api_key='AIzaSyD80xO_hx4nYwmRCVBL_uotZHm1udWDwRs'):
@@ -192,7 +199,7 @@ def get_some_play(place, start_date, end_date, keywords):
     time_match_places = []
     for valid_place in valid_places:
         if check_time_availbility(
-                start_date, end_date, OpeningHours.objects.filter(place=valid_place)):
+                start_date, end_date, OpeningHours.objects.filter(place=valid_place), valid_place.google_id):
             time_match_places.append(valid_place)
     return time_match_places
 
@@ -221,7 +228,7 @@ def get_some_eat(place, start_date, end_date, keywords):
     time_match_places = []
     for valid_place in valid_places:
         if check_time_availbility(
-                start_date, end_date, OpeningHours.objects.filter(place=valid_place)):
+                start_date, end_date, OpeningHours.objects.filter(place=valid_place), valid_place.google_id):
             time_match_places.append(valid_place)
     return time_match_places
 
