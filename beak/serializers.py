@@ -6,7 +6,7 @@ class PlaceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Place
         fields = ['name', 'address', 'google_id',
-                  'google_rating', 'website']
+                  'google_rating', 'website', 'image_url']
 
 
 class OpeningHoursSerializer(serializers.ModelSerializer):

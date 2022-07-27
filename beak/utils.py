@@ -141,17 +141,34 @@ def check_time_availbility(start_str, end_str, opening_hours, google_id):
         return False
 
 
+def host_image(google_photo_ref):
+    if google_photo_ref is None:
+        return None
+    api_url = 'https://maps.googleapis.com/maps/api/place/photo?maxheight=400&maxwidth=400&photoreference={}&key={}' \
+        .format(google_photo_ref, 'AIzaSyD80xO_hx4nYwmRCVBL_uotZHm1udWDwRs')
+    response = requests.get(api_url)
+    host_api_url = 'https://api.imgbb.com/1/upload?key=8853b49ac4c262ec58a9849488dcb5a4'
+    host_response = requests.post(
+        host_api_url, files={'image': response.content})
+    json_host_response = json.loads(host_response.text)
+    return json_host_response['data']['url']
+
+
 def request_save_details_of_places(place, api_key='AIzaSyD80xO_hx4nYwmRCVBL_uotZHm1udWDwRs'):
     # Return early if the opening hours are already saved.
     if OpeningHours.objects.filter(place=place).exists():
         return True
     # Place API : Place Details https://developers.google.com/maps/documentation/places/web-service/details#required-parameters
-    api_url = 'https://maps.googleapis.com/maps/api/place/details/json?place_id={}&key={}&fields=opening_hours/periods,website' \
+    api_url = 'https://maps.googleapis.com/maps/api/place/details/json?place_id={}&key={}&fields=opening_hours/periods,website,photos' \
         .format(place.google_id, api_key)
     response = requests.get(api_url)
     json_response = json.loads(response.text)
+    if 'photos' in json_response['result']:
+        place.image_url = host_image(
+            json_response['result']['photos'][0]['photo_reference'])
     if 'website' in json_response['result']:
         place.website = json_response['result']['website']
+    place.save()
     for period in json_response['result']['opening_hours']['periods']:
         try:
             open_time = period['open']['time']

@@ -46,6 +46,7 @@ class Place(models.Model):
     google_id = models.CharField(max_length=200, blank=False, primary_key=True)
     google_rating = models.FloatField(default=-1)
     website = models.CharField(max_length=200, blank=True)
+    image_url = models.CharField(max_length=200, blank=True)
     #business_status = models.CharField(max_length=100, blank=False)
 
 
