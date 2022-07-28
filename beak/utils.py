@@ -125,14 +125,18 @@ def check_time_availbility(start_str, end_str, opening_hours, google_id):
         startday_opening_hours = OpeningHoursSerializer(
             opening_hours.filter(weekday=start_weekday), many=True).data[0]
         startday_close_time = datetime.datetime.strptime(
+            startday_opening_hours['to_hour'], '%H:%M:%S').time()
+        startday_open_time = datetime.datetime.strptime(
             startday_opening_hours['from_hour'], '%H:%M:%S').time()
-        if startday_close_time > start_datetime.time():
-            return True
         endday_opening_hours = OpeningHoursSerializer(
             opening_hours.filter(weekday=end_weekday), many=True).data[0]
         endday_open_time = datetime.datetime.strptime(
+            endday_opening_hours['from_hour'], '%H:%M:%S').time()
+        endday_close_time = datetime.datetime.strptime(
             endday_opening_hours['to_hour'], '%H:%M:%S').time()
-        if endday_open_time < end_datetime.time():
+        if startday_close_time > start_datetime.time() > startday_open_time:
+            return True
+        if endday_open_time < end_datetime.time() < endday_close_time:
             return True
         return False
     except IndexError:
