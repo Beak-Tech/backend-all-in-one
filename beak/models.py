@@ -1,3 +1,4 @@
+from unicodedata import category
 from django.db import models
 
 # Create your models here.
@@ -19,6 +20,7 @@ WEEKDAYS = [
 class General_Location_for_Eat(models.Model):
     places = models.ManyToManyField('Place', blank=True)
     name = models.CharField(max_length=100, blank=False, primary_key=True)
+    categories = models.ManyToManyField('Category', blank=True)
 
     def __str__(self):
         return self.name
@@ -27,9 +29,16 @@ class General_Location_for_Eat(models.Model):
 class General_Location_for_Play(models.Model):
     places = models.ManyToManyField('Place', blank=True)
     name = models.CharField(max_length=100, blank=False, primary_key=True)
+    categories = models.ManyToManyField('Category', blank=True)
 
     def __str__(self):
         return self.name
+
+    
+class Category(models.Model):
+    places = models.ManyToManyField('Place', blank=True)
+    name = models.CharField(max_length=100, blank=False, primary_key=True)
+    
 
 
 class Token(models.Model):
@@ -48,7 +57,7 @@ class Place(models.Model):
     website = models.CharField(max_length=200, blank=True)
     image_url = models.CharField(max_length=200, blank=True)
     #business_status = models.CharField(max_length=100, blank=False)
-
+    category_name = models.CharField(max_length=100)
 
 class User(models.Model):
     name = models.CharField(max_length=100)

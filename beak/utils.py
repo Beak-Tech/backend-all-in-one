@@ -6,7 +6,7 @@ import json
 import collections
 import datetime
 from beak.serializers import PlaceSerializer, OpeningHoursSerializer, TokenSerializer
-from beak.models import Place, OpeningHours, General_Location_for_Eat, General_Location_for_Play, Token
+from beak.models import Place, OpeningHours, General_Location_for_Eat, General_Location_for_Play, Token, Category
 
 
 class Place_Utils:
@@ -21,7 +21,7 @@ class Place_Utils:
         for key_word in key_words:
             self.text_search(key_word)
         for key_word, results in self.results.items():
-            self.result_filter(results)
+            self.result_filter(results, key_word)
 
     def text_search(self, key_word):
         # Places API
@@ -31,7 +31,7 @@ class Place_Utils:
         json_response = json.loads(response.text)
         self.results[key_word] = json_response['results']
 
-    def result_filter(self, results):
+    def result_filter(self, results, category_name):
         for result in results:
             try:
                 if result['business_status'] != 'OPERATIONAL':
@@ -42,6 +42,7 @@ class Place_Utils:
                 self.places[place_id]['address'] = result['formatted_address']
                 self.places[place_id]['google_rating'] = result['rating']
                 self.places[place_id]['types'] = result['types']
+                self.places[place_id]['category_name'] = category_name
             except KeyError:
                 if 'address' not in self.places[place_id] or 'name' not in self.places[place_id] \
                         or 'google_rating' not in self.places[place_id] \
@@ -89,6 +90,7 @@ class Place_Utils:
             cur_dic['name'] = info['name']
             cur_dic['address'] = info['address']
             cur_dic['google_rating'] = info['google_rating']
+            cur_dic['category_name'] = info['category_name']
             ret.append(cur_dic)
         return ret
 
@@ -221,8 +223,19 @@ def get_some_play(place, start_date, end_date, keywords):
     for valid_place in valid_places:
         if check_time_availbility(
                 start_date, end_date, OpeningHours.objects.filter(place=valid_place), valid_place.google_id):
-            time_match_places.append(valid_place)
+             time_match_places.append(valid_place)
+    
+
+    for matched_place in time_match_places:
+        if General_Location_for_Play.objects.filter(categories=matched_place.category_name).exists():
+            Category.objects.get(name=matched_place.category_name).add(matched_place)
+            print(Category.objects.get(name=matched_place.category_name))
+        else:
+            new_category = Category(name=matched_place.category_name)
+            new_category.save()
+            new_category.places.add(matched_place)
     return time_match_places
+
 
 
 def get_some_eat(place, start_date, end_date, keywords):
@@ -251,6 +264,14 @@ def get_some_eat(place, start_date, end_date, keywords):
         if check_time_availbility(
                 start_date, end_date, OpeningHours.objects.filter(place=valid_place), valid_place.google_id):
             time_match_places.append(valid_place)
+    for matched_place in time_match_places:
+        if General_Location_for_Play.objects.filter(categories=matched_place.category_name).exists():
+            Category.objects.get(name=matched_place.category_name).add(matched_place)
+            print(Category.objects.get(name=matched_place.category_name))
+        else:
+            new_category = Category(name=matched_place.category_name)
+            new_category.save()
+            new_category.places.add(matched_place)
     return time_match_places
 
 
