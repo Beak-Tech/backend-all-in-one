@@ -129,3 +129,10 @@ ALLOWED_HOSTS = ['198.211.99.20', 'localhost',
                  '127.0.0.1', 'kubernetes.docker.internal', 'solaceg.pythonanywhere.com']
 
 CORS_ORIGIN_ALLOW_ALL = True
+
+# Email Settings
+EMAIL_HOST = ''
+EMAIL_PORT = ''
+EMAIL_HOST_USER = ''
+EMAIL_HOST_PASSWORD = ''
+EMAIL_USE_TLS = False
