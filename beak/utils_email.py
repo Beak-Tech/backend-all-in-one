@@ -16,4 +16,4 @@ def email_contact(request):
         recipient_list
         )
 
-    return render(request,)
+    return render(request)
