@@ -38,6 +38,7 @@ class Token(models.Model):
         'Place', blank=True, related_name='play_places')
     eat_places = models.ManyToManyField(
         'Place', blank=True, related_name='eat_places')
+    categories = models.JSONField(blank=True, null=True)
 
 
 class Place(models.Model):
@@ -47,6 +48,7 @@ class Place(models.Model):
     google_rating = models.FloatField(default=-1)
     website = models.CharField(max_length=200, blank=True)
     image_url = models.CharField(max_length=200, blank=True)
+    category = models.CharField(max_length=200, blank=True)
     #business_status = models.CharField(max_length=100, blank=False)
 
 

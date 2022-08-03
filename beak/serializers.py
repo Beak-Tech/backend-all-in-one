@@ -6,7 +6,7 @@ class PlaceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Place
         fields = ['name', 'address', 'google_id',
-                  'google_rating', 'website', 'image_url']
+                  'google_rating', 'website', 'image_url', 'category']
 
 
 class OpeningHoursSerializer(serializers.ModelSerializer):
@@ -18,10 +18,5 @@ class OpeningHoursSerializer(serializers.ModelSerializer):
 class TokenSerializer(serializers.ModelSerializer):
     class Meta:
         model = Token
-        fields = ['number', 'places']
-# a= datetime.time.now()
-#p = Place(name="ok", address="ok_address", google_id = 'example_id', google_rating = 3.4)
-#oph = OpeningHours(place = p, weekday = 0, from_hour =a, to_hour = a)
-# a= datetime.time.now()
-#p = Place(name="ok", address="ok_address", google_id = 'example_id', google_rating = 3.4)
-#oph = OpeningHours(place = p, weekday = 0, from_hour =a, to_hour = a)
+        fields = ['number', 'play_places', 'eat_places',
+                  'categories']

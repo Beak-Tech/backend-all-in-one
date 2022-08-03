@@ -7,6 +7,7 @@ import collections
 import datetime
 from beak.serializers import PlaceSerializer, OpeningHoursSerializer, TokenSerializer
 from beak.models import Place, OpeningHours, General_Location_for_Eat, General_Location_for_Play, Token
+from beak.place_keywords import in_door_activities, out_door_activities
 
 
 class Place_Utils:
@@ -21,7 +22,7 @@ class Place_Utils:
         for key_word in key_words:
             self.text_search(key_word)
         for key_word, results in self.results.items():
-            self.result_filter(results)
+            self.result_filter(results, key_word)
 
     def text_search(self, key_word):
         # Places API
@@ -31,7 +32,7 @@ class Place_Utils:
         json_response = json.loads(response.text)
         self.results[key_word] = json_response['results']
 
-    def result_filter(self, results):
+    def result_filter(self, results, category):
         for result in results:
             try:
                 if result['business_status'] != 'OPERATIONAL':
@@ -42,6 +43,7 @@ class Place_Utils:
                 self.places[place_id]['address'] = result['formatted_address']
                 self.places[place_id]['google_rating'] = result['rating']
                 self.places[place_id]['types'] = result['types']
+                self.places[place_id]['category'] = category
             except KeyError:
                 if 'address' not in self.places[place_id] or 'name' not in self.places[place_id] \
                         or 'google_rating' not in self.places[place_id] \
@@ -89,6 +91,7 @@ class Place_Utils:
             cur_dic['name'] = info['name']
             cur_dic['address'] = info['address']
             cur_dic['google_rating'] = info['google_rating']
+            cur_dic['category'] = info['category']
             ret.append(cur_dic)
         return ret
 
@@ -108,20 +111,20 @@ def check_time_availbility(start_str, end_str, opening_hours, google_id):
     # This is in case we start at Friday and end at Monday, which will prevent the for loop from running.
     if start_weekday > end_weekday:
         end_weekday += 7
-    # As long as the days between start and end have any opening hour, we can return True.
-    for weekday in range(start_weekday + 1, end_weekday):
-        # In case we might add 7 to end_weekday, we need to mod 7 to get the correct weekday.
-        actual_day = weekday % 7
-        weekday_opening_hours = OpeningHoursSerializer(
-            opening_hours.filter(weekday=actual_day), many=True).data[0]
-        weekday_open_time = datetime.datetime.strptime(
-            weekday_opening_hours['from_hour'], '%H:%M:%S').time()
-        weekday_close_time = datetime.datetime.strptime(
-            weekday_opening_hours['to_hour'], '%H:%M:%S').time()
-        if weekday_open_time != weekday_close_time:
-            return True
-    # We will need to check the start day then.
     try:
+        # As long as the days between start and end have any opening hour, we can return True.
+        for weekday in range(start_weekday + 1, end_weekday):
+            # In case we might add 7 to end_weekday, we need to mod 7 to get the correct weekday.
+            actual_day = weekday % 7
+            weekday_opening_hours = OpeningHoursSerializer(
+                opening_hours.filter(weekday=actual_day), many=True).data[0]
+            weekday_open_time = datetime.datetime.strptime(
+                weekday_opening_hours['from_hour'], '%H:%M:%S').time()
+            weekday_close_time = datetime.datetime.strptime(
+                weekday_opening_hours['to_hour'], '%H:%M:%S').time()
+            if weekday_open_time != weekday_close_time:
+                return True
+        # We will need to check the start day then.
         startday_opening_hours = OpeningHoursSerializer(
             opening_hours.filter(weekday=start_weekday), many=True).data[0]
         startday_close_time = datetime.datetime.strptime(
@@ -259,10 +262,33 @@ def get_token_utils(place, start_time, end_time, keywords, play_or_eat):
                    str(end_time).encode('utf-8')).hexdigest()
     new_token = Token(number=token)
     new_token.save()
+    json_format = {'play': {}, 'eat': {}}
     if play_or_eat == 0 or play_or_eat == 2:
         valid_places = get_some_play(
             place, start_time, end_time, keywords)
+        available_categories = set()
+        for place in valid_places:
+            available_categories.add(place.category)
+        indoor = {}
+        id = 0
+        for category in in_door_activities:
+            if category in available_categories:
+                indoor[category] = {'id': f'0-0-{id}', 'status': 1}
+            else:
+                indoor[category] = {'id': f'0-0-{id}', 'status': 0}
+            id += 1
+        outdoor = {}
+        id = 0
+        for category in out_door_activities:
+            if category in available_categories:
+                outdoor[category] = {'id': f'0-1-{id}', 'status': 1}
+            else:
+                outdoor[category] = {'id': f'0-1-{id}', 'status': 0}
+            id += 1
+        json_format['play'] = {"indoor": indoor, "outdoor": outdoor}
+        new_token.categories = json.dumps(json_format)
         new_token.play_places.add(*valid_places)
+        new_token.save()
     if play_or_eat == 1 or play_or_eat == 2:
         valid_places = get_some_eat(
             place, start_time, end_time, keywords)
@@ -277,3 +303,10 @@ def get_some_places_to_play_with_token(token):
         return valid_play, valid_eat
     else:
         return None
+
+
+def get_categories_for_token(token):
+    if Token.objects.filter(number=token).exists():
+        return Token.objects.get(number=token).categories
+    else:
+        return
