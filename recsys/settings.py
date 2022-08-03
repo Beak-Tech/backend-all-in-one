@@ -130,9 +130,12 @@ ALLOWED_HOSTS = ['198.211.99.20', 'localhost',
 
 CORS_ORIGIN_ALLOW_ALL = True
 
-# Email Settings
-EMAIL_HOST = ''
-EMAIL_PORT = ''
-EMAIL_HOST_USER = ''
-EMAIL_HOST_PASSWORD = ''
-EMAIL_USE_TLS = False
+# Email Sending
+# https://docs.djangoproject.com/en/4.0/topics/email/ 
+# e.g. send_mail('subject', 'massage', settings.EMAIL_HOST_USER, [recipient_list])
+# Settings setup instruction: https://youtu.be/xNqnHmXIuzU start from 15.36
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = '587'
+EMAIL_HOST_USER = 'beaktech.test@gmail.com'
+EMAIL_HOST_PASSWORD = 'muuuehxrtvgwkmnd'
+EMAIL_USE_TLS = True
