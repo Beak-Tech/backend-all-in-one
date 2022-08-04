@@ -129,3 +129,13 @@ ALLOWED_HOSTS = ['198.211.99.20', 'localhost',
                  '127.0.0.1', 'kubernetes.docker.internal', 'solaceg.pythonanywhere.com']
 
 CORS_ORIGIN_ALLOW_ALL = True
+
+# Email Sending
+# https://docs.djangoproject.com/en/4.0/topics/email/ 
+# e.g. send_mail('subject', 'massage', settings.EMAIL_HOST_USER, [recipient_list])
+# Settings setup instruction: https://youtu.be/xNqnHmXIuzU start from 15.36
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = '587'
+EMAIL_HOST_USER = 'beaktech.test@gmail.com'
+EMAIL_HOST_PASSWORD = 'muuuehxrtvgwkmnd'
+EMAIL_USE_TLS = True
