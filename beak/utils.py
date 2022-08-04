@@ -257,7 +257,7 @@ def get_some_eat(place, start_date, end_date, keywords):
     return time_match_places
 
 
-def get_token_utils(place, start_time, end_time, keywords, play_or_eat):
+def get_token_utils(place, start_time, end_time, play_keywords, eat_keywords, play_or_eat):
     token = sha256(place.encode('utf-8') + str(start_time).encode('utf-8') +
                    str(end_time).encode('utf-8')).hexdigest()
     new_token = Token(number=token)
@@ -265,7 +265,7 @@ def get_token_utils(place, start_time, end_time, keywords, play_or_eat):
     json_format = {'play': {}, 'eat': {}}
     if play_or_eat == 0 or play_or_eat == 2:
         valid_places = get_some_play(
-            place, start_time, end_time, keywords)
+            place, start_time, end_time, play_keywords)
         available_categories = set()
         for place in valid_places:
             available_categories.add(place.category)
@@ -291,7 +291,7 @@ def get_token_utils(place, start_time, end_time, keywords, play_or_eat):
         new_token.save()
     if play_or_eat == 1 or play_or_eat == 2:
         valid_places = get_some_eat(
-            place, start_time, end_time, keywords)
+            place, start_time, end_time, eat_keywords)
         new_token.eat_places.add(*valid_places)
     return token
 

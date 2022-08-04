@@ -9,7 +9,7 @@ from beak.serializers import PlaceSerializer
 from beak.utils import get_some_places_to_play_with_token, get_token_utils, get_categories_for_token
 from beak.utils import get_some_play, get_some_eat
 from beak.models import Token, Place, User, OpeningHours, General_Location_for_Eat, General_Location_for_Play
-from beak.place_keywords import in_door_activities, out_door_activities
+from beak.place_keywords import in_door_activities, out_door_activities, foods
 
 
 @api_view(['POST'])
@@ -24,8 +24,7 @@ def get_places(request):
 
     if data['item'] == 1 or data['item'] == 2:
         valid_eat = get_some_eat(
-            place, data['start'], data['end'], keywords=[
-                'Restaurant', 'Fast Food', 'Pizza'])
+            place, data['start'], data['end'], keywords=foods[:3])
     ret = {'places': PlaceSerializer(
         valid_play, many=True).data, 'eat': PlaceSerializer(valid_eat, many=True).data}
     return Response(ret, status=status.HTTP_200_OK)
@@ -38,7 +37,7 @@ def get_token(request):
     place = data['location']
     # Item 0 means play, 1 means eat, 2 means both
     token = get_token_utils(place, data['start'], data['end'],
-                            keywords=in_door_activities[:3], play_or_eat=data['item'])
+                            in_door_activities[:3], foods[:3], play_or_eat=data['item'])
     return Response({"token": token}, status=status.HTTP_200_OK)
 
 
