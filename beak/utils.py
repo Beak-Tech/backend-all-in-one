@@ -259,7 +259,7 @@ def get_some_eat(place, start_date, end_date, keywords):
 
 def get_token_utils(place, start_time, end_time, play_keywords, eat_keywords, play_or_eat):
     token = sha256(place.encode('utf-8') + str(start_time).encode('utf-8') +
-                   str(end_time).encode('utf-8')).hexdigest()
+                   str(end_time).encode('utf-8') + str(random.randrange(10000)).encode('utf-8')).hexdigest()
     new_token = Token(number=token)
     new_token.save()
     json_format = {'play': {}, 'eat': {}}
