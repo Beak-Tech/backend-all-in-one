@@ -7,7 +7,7 @@ import collections
 import datetime
 from beak.serializers import PlaceSerializer, OpeningHoursSerializer, TokenSerializer
 from beak.models import Place, OpeningHours, General_Location_for_Eat, General_Location_for_Play, Token
-from beak.place_keywords import in_door_activities, out_door_activities
+from beak.place_keywords import in_door_activities, out_door_activities, foods
 
 
 class Place_Utils:
@@ -103,8 +103,7 @@ def check_time_availbility(start_str, end_str, opening_hours, google_id):
         start_str, '%Y-%m-%dT%H:%M')
     end_datetime = datetime.datetime.strptime(
         end_str, '%Y-%m-%dT%H:%M')
-    time_dif = end_datetime - start_datetime
-    if time_dif >= datetime.timedelta(hours=168):
+    if end_datetime - start_datetime >= datetime.timedelta(hours=168):
         return True
     start_weekday = start_datetime.weekday()
     end_weekday = end_datetime.weekday()
@@ -274,13 +273,25 @@ def get_token_utils(place, start_time, end_time, play_keywords, eat_keywords, pl
                 outdoor[category] = {'id': f'0-1-{id}', 'status': 0}
             id += 1
         json_format['play'] = {"indoor": indoor, "outdoor": outdoor}
-        new_token.categories = json.dumps(json_format)
         new_token.play_places.add(*valid_places)
-        new_token.save()
     if play_or_eat == 1 or play_or_eat == 2:
         valid_places = get_some_eat(
             place, start_time, end_time, eat_keywords)
         new_token.eat_places.add(*valid_places)
+        available_categories = set()
+        for place in valid_places:
+            available_categories.add(place.category)
+        eat = {}
+        id = 0
+        for category in foods:
+            if category in available_categories:
+                eat[category] = {'id': f'0-0-{id}', 'status': 1}
+            else:
+                eat[category] = {'id': f'0-0-{id}', 'status': 0}
+            id += 1
+        json_format['eat'] = eat
+    new_token.categories = json.dumps(json_format)
+    new_token.save()
     return token
 
 
