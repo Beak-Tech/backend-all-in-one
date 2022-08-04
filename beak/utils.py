@@ -104,48 +104,36 @@ def check_time_availbility(start_str, end_str, opening_hours, google_id):
     end_datetime = datetime.datetime.strptime(
         end_str, '%Y-%m-%dT%H:%M')
     time_dif = end_datetime - start_datetime
-    if time_dif > datetime.timedelta(hours=168):
+    if time_dif >= datetime.timedelta(hours=168):
         return True
     start_weekday = start_datetime.weekday()
     end_weekday = end_datetime.weekday()
     # This is in case we start at Friday and end at Monday, which will prevent the for loop from running.
-    if start_weekday > end_weekday:
+    if start_weekday >= end_weekday:
         end_weekday += 7
-    try:
-        # As long as the days between start and end have any opening hour, we can return True.
-        for weekday in range(start_weekday + 1, end_weekday):
-            # In case we might add 7 to end_weekday, we need to mod 7 to get the correct weekday.
-            actual_day = weekday % 7
-            weekday_opening_hours = OpeningHoursSerializer(
-                opening_hours.filter(weekday=actual_day), many=True).data[0]
-            weekday_open_time = datetime.datetime.strptime(
-                weekday_opening_hours['from_hour'], '%H:%M:%S').time()
-            weekday_close_time = datetime.datetime.strptime(
-                weekday_opening_hours['to_hour'], '%H:%M:%S').time()
-            if weekday_open_time != weekday_close_time:
-                return True
-        # We will need to check the start day then.
-        startday_opening_hours = OpeningHoursSerializer(
-            opening_hours.filter(weekday=start_weekday), many=True).data[0]
-        startday_close_time = datetime.datetime.strptime(
-            startday_opening_hours['to_hour'], '%H:%M:%S').time()
-        startday_open_time = datetime.datetime.strptime(
-            startday_opening_hours['from_hour'], '%H:%M:%S').time()
-        endday_opening_hours = OpeningHoursSerializer(
-            opening_hours.filter(weekday=end_weekday), many=True).data[0]
-        endday_open_time = datetime.datetime.strptime(
-            endday_opening_hours['from_hour'], '%H:%M:%S').time()
-        endday_close_time = datetime.datetime.strptime(
-            endday_opening_hours['to_hour'], '%H:%M:%S').time()
-        if startday_close_time > start_datetime.time() > startday_open_time:
+    # As long as the days between start and end have any opening hour, we can return True.
+    for weekday in range(start_weekday + 1, end_weekday):
+        # In case we might add 7 to end_weekday, we need to mod 7 to get the correct weekday.
+        actual_day = weekday % 7
+        weekday_opening_hours = list(
+            opening_hours.filter(weekday=actual_day))
+        if not weekday_opening_hours:
+            continue
+        weekday_opening_hours = weekday_opening_hours[0]
+        if weekday_opening_hours.from_hour != weekday_opening_hours.to_hour:
             return True
-        if endday_open_time < end_datetime.time() < endday_close_time:
+    # We will need to check the start day then.
+    startday_opening_hours = list(opening_hours.filter(weekday=start_weekday))
+    if startday_opening_hours:
+        startday_opening_hours = startday_opening_hours[0]
+        if startday_opening_hours.from_hour > start_datetime.time() > startday_opening_hours.to_hour:
             return True
-        return False
-    except IndexError:
-        print(
-            f'No opening hours for {start_weekday} for google_id {google_id}.')
-        return False
+    endday_opening_hours = list(opening_hours.filter(weekday=end_weekday))
+    if endday_opening_hours:
+        endday_opening_hours = endday_opening_hours[0]
+        if endday_opening_hours.to_hour > end_datetime.time() > endday_opening_hours.from_hour:
+            return True
+    return False
 
 
 def host_image(google_photo_ref):
